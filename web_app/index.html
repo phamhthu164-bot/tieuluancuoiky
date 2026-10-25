@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DT077 – Dem & Liet ke Thanh phan Lien thong</title>
+  <meta name="description" content="Web demo ket qua 12 ca kiem thu BFS – DT077 Pham Huynh Thu N24DCDT091" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══ HEADER ══════════════════════════════════════════════════════════════ -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-badge">DT077</div>
+    <div class="header-text">
+      <h1>Dem &amp; Liet ke Thanh phan Lien thong</h1>
+      <p class="header-sub">Thuat toan BFS &nbsp;&middot;&nbsp; Pham Huynh Thu &nbsp;&middot;&nbsp; N24DCDT091 &nbsp;&middot;&nbsp; D24CQDT01-N</p>
+    </div>
+    <div class="header-right">
+      <div class="header-tag">INT13185 &middot; Nhom 03</div>
+      <div class="header-gv">GVHD: ThS. Ho Nhut Minh</div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ MAIN 3-COLUMN ════════════════════════════════════════════════════════ -->
+<main class="layout">
+
+  <!-- ── LEFT: Input & Presets ── -->
+  <aside class="panel panel-left">
+    <div class="panel-section">
+      <h2 class="section-title"><span class="ico">⚙</span> Nhap lieu</h2>
+
+      <!-- Preset tabs: grouped -->
+      <div class="preset-group-label">Vi du phieu giao</div>
+      <div class="preset-grid" id="pg-vidu">
+        <button class="preset-btn active" data-preset="VD01" id="pbtn-VD01">VD01</button>
+        <button class="preset-btn" data-preset="VD02" id="pbtn-VD02">VD02</button>
+      </div>
+
+      <div class="preset-group-label">Do thi dac biet</div>
+      <div class="preset-grid" id="pg-tk">
+        <button class="preset-btn" data-preset="TK01" id="pbtn-TK01">TK01</button>
+        <button class="preset-btn" data-preset="TK02" id="pbtn-TK02">TK02</button>
+      </div>
+
+      <div class="preset-group-label">Ca bien</div>
+      <div class="preset-grid" id="pg-bien">
+        <button class="preset-btn" data-preset="BIEN01" id="pbtn-BIEN01">BIEN01</button>
+        <button class="preset-btn" data-preset="BIEN02" id="pbtn-BIEN02">BIEN02</button>
+        <button class="preset-btn" data-preset="BIEN03" id="pbtn-BIEN03">BIEN03</button>
+      </div>
+
+      <div class="preset-group-label">Ca kiem tra</div>
+      <div class="preset-grid" id="pg-kt">
+        <button class="preset-btn" data-preset="KT09" id="pbtn-KT09">KT09</button>
+        <button class="preset-btn" data-preset="KT10" id="pbtn-KT10">KT10</button>
+        <button class="preset-btn" data-preset="KT11" id="pbtn-KT11">KT11</button>
+        <button class="preset-btn" data-preset="KT12" id="pbtn-KT12">KT12</button>
+      </div>
+
+      <div class="preset-group-label">Kiem tra loi</div>
+      <div class="preset-grid" id="pg-loi">
+        <button class="preset-btn preset-err" data-preset="LOI01" id="pbtn-LOI01">LOI01</button>
+      </div>
+
+      <!-- Description box -->
+      <div class="preset-desc" id="preset-desc">Chon 1 ca kiem thu de xem mo ta va ket qua.</div>
+    </div>
+
+    <div class="panel-section">
+      <h2 class="section-title"><span class="ico">📝</span> Tuy chinh</h2>
+      <div class="form-group">
+        <label for="input-n">So dinh n <span class="fg-hint">(1 – 100)</span></label>
+        <input type="number" id="input-n" min="1" max="100" value="5" />
+      </div>
+      <div class="form-group">
+        <label for="input-edges">Canh <span class="fg-hint">(moi dong: u v)</span></label>
+        <textarea id="input-edges" rows="6" spellcheck="false">1 2
+3 4</textarea>
+      </div>
+      <div class="validation-msg" id="validation-msg"></div>
+
+      <div class="action-row">
+        <button class="btn-primary" id="btn-run">&#9654; Chay BFS</button>
+        <button class="btn-step" id="btn-step" disabled>&#9193; Buoc</button>
+        <button class="btn-ghost" id="btn-reset">&#10226; Reset</button>
+      </div>
+      <div class="speed-row">
+        <span class="fg-hint">Cham</span>
+        <input type="range" id="speed-slider" min="100" max="1800" value="700" step="100" />
+        <span class="fg-hint">Nhanh</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── MIDDLE: Canvas ── -->
+  <section class="panel panel-canvas">
+    <div class="canvas-hdr">
+      <h2 class="section-title"><span class="ico">&#9677;</span> Do thi truc quan</h2>
+      <div class="canvas-status" id="canvas-status">San sang</div>
+    </div>
+    <canvas id="graph-canvas"></canvas>
+    <p class="canvas-hint">Keo dinh de di chuyen &middot; Mau = thanh phan lien thong</p>
+
+    <!-- Legend appears after run -->
+    <div class="legend-row" id="legend-row" style="display:none"></div>
+  </section>
+
+  <!-- ── RIGHT: Results ── -->
+  <section class="panel panel-right">
+    <h2 class="section-title"><span class="ico">📊</span> Ket qua</h2>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="scard" id="sc-nhom">
+        <div class="scard-val" id="sv-nhom">–</div>
+        <div class="scard-lbl">So TP lien thong</div>
+      </div>
+      <div class="scard" id="sc-dinh">
+        <div class="scard-val" id="sv-dinh">–</div>
+        <div class="scard-lbl">So dinh (n)</div>
+      </div>
+      <div class="scard" id="sc-canh">
+        <div class="scard-val" id="sv-canh">–</div>
+        <div class="scard-lbl">So canh (m)</div>
+      </div>
+      <div class="scard" id="sc-max">
+        <div class="scard-val" id="sv-max">–</div>
+        <div class="scard-lbl">TP lon nhat</div>
+      </div>
+    </div>
+
+    <!-- Label array nhan[] -->
+    <div class="rb" id="rb-nhan" style="display:none">
+      <div class="rb-title">Mang nhan[ ] (chi so dinh &#x2192; ma nhom)</div>
+      <div class="nhan-wrap" id="nhan-wrap"></div>
+    </div>
+
+    <!-- Group list -->
+    <div class="rb" id="rb-groups" style="display:none">
+      <div class="rb-title">Cac thanh phan lien thong</div>
+      <div id="group-list"></div>
+    </div>
+
+    <!-- Adjacency list -->
+    <div class="rb" id="rb-adj" style="display:none">
+      <div class="rb-title">Danh sach ke (sau sort tang dan)</div>
+      <div class="adj-wrap" id="adj-wrap"></div>
+    </div>
+
+    <!-- BFS trace -->
+    <div class="rb" id="rb-trace" style="display:none">
+      <div class="rb-title">Nhat ky BFS (tung buoc)</div>
+      <div class="trace-scroll">
+        <table class="trace-tbl">
+          <thead>
+            <tr>
+              <th>#</th><th>Su kien</th><th>Dinh</th><th>Hang doi Q</th><th>Nhom</th>
+            </tr>
+          </thead>
+          <tbody id="trace-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ═══ ALL TEST CASES TABLE ═════════════════════════════════════════════════ -->
+<section class="all-cases">
+  <div class="all-cases-inner">
+    <h2 class="section-title" style="margin-bottom:1.2rem"><span class="ico">🧪</span> Tat ca 12 ca kiem thu (test_detai.cpp)</h2>
+    <div class="cases-table-wrap">
+      <table class="cases-tbl" id="cases-tbl">
+        <thead>
+          <tr>
+            <th>Ca</th>
+            <th>Mo ta</th>
+            <th>n</th>
+            <th>So canh</th>
+            <th>Ket qua mong doi (Actual)</th>
+            <th>Trang thai</th>
+          </tr>
+        </thead>
+        <tbody id="cases-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- Cards -->
+    <div class="case-cards" id="case-cards"></div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ════════════════════════════════════════════════════════════════ -->
+<footer class="site-footer">
+  <p>DT077 &middot; Pham Huynh Thu &middot; N24DCDT091 &middot; D24CQDT01-N &middot; INT13185 Nhom 03 &middot; GVHD: ThS. Ho Nhut Minh</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

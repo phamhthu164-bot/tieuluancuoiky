@@ -1,0 +1,33 @@
+# Bien dich C++
+*.o
+*.exe
+*.obj
+*.out
+*.ilk
+*.pdb
+*.exp
+*.lib
+*.dll
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.egg-info/
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Word temp files
+~$*.docx
+~WRL*.tmp
+
+# Log / scratch
+*.log
+scratch/
