@@ -8,8 +8,8 @@
 
 // ── COLOUR PALETTE ────────────────────────────────────────────────────────────
 const G_COLORS = [
-  '#6c7fff','#34d399','#f87171','#fbbf24',
-  '#a78bfa','#38bdf8','#fb923c','#f472b6'
+  '#3b82f6','#8b5cf6','#ec4899','#f59e0b',
+  '#10b981','#06b6d4','#ea580c','#6366f1'
 ];
 function gColor(g) { return G_COLORS[(g - 1) % G_COLORS.length]; }
 
@@ -273,8 +273,8 @@ function drawGraph() {
     ctx.beginPath();
     ctx.moveTo(p1.x, p1.y);
     ctx.lineTo(p2.x, p2.y);
-    ctx.strokeStyle = sameGrp ? gColor(RS.nhan[u]) + '70' : 'rgba(255,255,255,0.1)';
-    ctx.lineWidth   = sameGrp ? 2.5 : 1.5;
+    ctx.strokeStyle = sameGrp ? gColor(RS.nhan[u]) + 'aa' : 'rgba(59,130,246,0.18)';
+    ctx.lineWidth   = sameGrp ? 2.8 : 1.5;
     ctx.stroke();
   }
 
@@ -282,27 +282,27 @@ function drawGraph() {
   for (let i = 1; i <= RS.n; i++) {
     const p = pos[i-1];
     const g = RS.nhan[i] || 0;
-    const col = g ? gColor(g) : '#3a4060';
+    const col = g ? gColor(g) : '#94a3b8';
     const isActive = i === RS.activeNode;
-    const r = NODE_R + (isActive ? 3 : 0);
+    const r = NODE_R + (isActive ? 4 : 0);
 
-    if (isActive) { ctx.shadowBlur = 22; ctx.shadowColor = col; }
+    if (isActive) { ctx.shadowBlur = 20; ctx.shadowColor = col + 'aa'; }
 
     // Fill
     ctx.beginPath();
     ctx.arc(p.x, p.y, r, 0, Math.PI*2);
-    ctx.fillStyle = isActive ? col : (g ? col + '30' : '#1a1f38');
+    ctx.fillStyle = isActive ? col : (g ? col + '28' : '#e8effc');
     ctx.fill();
 
     // Stroke
     ctx.strokeStyle = col;
-    ctx.lineWidth   = isActive ? 2.5 : 1.8;
+    ctx.lineWidth   = isActive ? 3 : 2;
     ctx.stroke();
     ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
 
     // Text label
-    ctx.fillStyle   = isActive ? '#fff' : (g ? col : '#6b7a9a');
-    ctx.font        = `${isActive ? 700 : 600} ${NODE_R - 3}px 'JetBrains Mono', monospace`;
+    ctx.fillStyle   = isActive ? '#fff' : (g ? col : '#64748b');
+    ctx.font        = `${isActive ? 800 : 700} ${NODE_R - 2}px 'JetBrains Mono', monospace`;
     ctx.textAlign   = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(String(i), p.x, p.y);
@@ -372,30 +372,66 @@ function parseInput() {
   return { n, edges };
 }
 
+// ── STEP REVEAL HELPER ────────────────────────────────────────────────────────
+function revealBlock(el, delay) {
+  if (!el) return;
+  el.style.display = '';
+  if (delay === 0) {
+    el.classList.add('revealed');
+    return;
+  }
+  el.classList.remove('revealed');
+  setTimeout(() => el.classList.add('revealed'), delay);
+}
+
+// ── ANIMATE STAT VALUE ────────────────────────────────────────────────────────
+function animateStat(el, value, delay) {
+  setTimeout(() => {
+    el.textContent = value;
+    el.classList.remove('count-anim');
+    void el.offsetWidth;
+    el.classList.add('count-anim');
+    const card = el.closest('.scard');
+    if (card) card.classList.add('anim', 'highlight');
+  }, delay);
+}
+
 // ── RENDER RESULTS ────────────────────────────────────────────────────────────
-function renderResults(result, edges) {
+function renderResults(result, edges, isInstant = false) {
   const { soNhom, nhan, danhSachNhom, ke } = result;
   const n = nhan.length - 1;
   const largest = timNhomLonNhat(danhSachNhom);
 
-  // Stats
-  svNhom.textContent = soNhom;
-  svDinh.textContent = n;
-  svCanh.textContent = edges.length;
-  svMax.textContent  = largest.length;
+  if (isInstant) {
+    svNhom.textContent = soNhom;
+    svDinh.textContent = n;
+    svCanh.textContent = edges.length;
+    svMax.textContent  = largest.length;
+    [svNhom, svDinh, svCanh, svMax].forEach(el => {
+      const card = el.closest('.scard');
+      if (card) card.classList.add('highlight');
+    });
+  } else {
+    // Stats: staggered number animation
+    animateStat(svNhom, soNhom, 120);
+    animateStat(svDinh, n, 240);
+    animateStat(svCanh, edges.length, 360);
+    animateStat(svMax, largest.length, 480);
+  }
 
   // nhan[] array
   nhanWrap.innerHTML = '';
   for (let i = 1; i <= n; i++) {
     const cell = document.createElement('div');
-    cell.className = 'nhan-cell anim';
+    cell.className = 'nhan-cell' + (isInstant ? '' : ' anim');
+    if (!isInstant) cell.style.animationDelay = `${(i - 1) * 35}ms`;
     cell.innerHTML = `
       <span class="nhan-idx">${i}</span>
-      <div class="nhan-val" style="background:${gColor(nhan[i])}" title="Dinh ${i} -> Nhom ${nhan[i]}">${nhan[i]}</div>
+      <div class="nhan-val" style="background:${gColor(nhan[i])}" title="Đỉnh ${i} → Nhóm ${nhan[i]}">${nhan[i]}</div>
     `;
     nhanWrap.appendChild(cell);
   }
-  rbNhan.style.display = '';
+  revealBlock(rbNhan, isInstant ? 0 : 500);
 
   // Groups
   groupList.innerHTML = '';
@@ -405,17 +441,18 @@ function renderResults(result, edges) {
     const isMax = members.length === largest.length &&
                   members.join() === largest.join();
     const div = document.createElement('div');
-    div.className = 'grp-item anim';
+    div.className = 'grp-item' + (isInstant ? '' : ' anim');
     div.style.borderColor = col + '50';
+    if (!isInstant) div.style.animationDelay = `${idx * 60}ms`;
     div.innerHTML = `
       <div class="grp-dot" style="background:${col}"></div>
-      <span class="grp-badge" style="color:${col}">Nhom ${g}</span>
+      <span class="grp-badge" style="color:${col}">Nhóm ${g}</span>
       <span class="grp-members">{ ${members.join(', ')} }</span>
-      <span class="grp-size">${members.length} dinh${isMax ? ' ★' : ''}</span>
+      <span class="grp-size">${members.length} đỉnh${isMax ? ' ★' : ''}</span>
     `;
     groupList.appendChild(div);
   });
-  rbGroups.style.display = '';
+  revealBlock(rbGroups, isInstant ? 0 : 800);
 
   // Adjacency list
   adjWrap.innerHTML = '';
@@ -425,11 +462,11 @@ function renderResults(result, edges) {
     div.innerHTML = `
       <span class="adj-node">${i}</span>
       <span class="adj-arrow"> -&gt; </span>
-      <span class="adj-neighbors">${ke[i].length ? ke[i].join(', ') : '(co lap)'}</span>
+      <span class="adj-neighbors">${ke[i].length ? ke[i].join(', ') : '(cô lập)'}</span>
     `;
     adjWrap.appendChild(div);
   }
-  rbAdj.style.display = '';
+  revealBlock(rbAdj, isInstant ? 0 : 1100);
 
   // Legend
   legendRow.innerHTML = '';
@@ -437,29 +474,33 @@ function renderResults(result, edges) {
     const g = idx + 1;
     const span = document.createElement('span');
     span.className = 'legend-item';
-    span.innerHTML = `<span class="legend-dot" style="background:${gColor(g)}"></span>Nhom ${g}`;
+    span.innerHTML = `<span class="legend-dot" style="background:${gColor(g)}"></span>Nhóm ${g}`;
     legendRow.appendChild(span);
   });
-  legendRow.style.display = 'flex';
+  if (isInstant) {
+    legendRow.style.display = 'flex';
+  } else {
+    setTimeout(() => { legendRow.style.display = 'flex'; }, 700);
+  }
 }
 
-function renderTrace(trace) {
+function renderTrace(trace, isInstant = false) {
   traceTbody.innerHTML = '';
   trace.forEach((step, idx) => {
     const tr = document.createElement('tr');
     let event='', node='', q='';
     if (step.type === 'start') {
-      event = 'Bat dau BFS'; node = String(step.node); q = `[${step.q.join(',')}]`;
+      event = 'Bắt đầu BFS'; node = String(step.node); q = `[${step.q.join(',')}]`;
       tr.className = 'tr-start';
     } else if (step.type === 'dequeue') {
-      event = 'Lay ra (pop)'; node = String(step.node); q = `[${step.q.join(',')}]`;
+      event = 'Lấy ra (pop)'; node = String(step.node); q = `[${step.q.join(',')}]`;
     } else {
-      event = 'Them vao Q'; node = `${step.from}->${step.node}`; q = `[${step.q.join(',')}]`;
+      event = 'Thêm vào Q'; node = `${step.from}->${step.node}`; q = `[${step.q.join(',')}]`;
     }
     tr.innerHTML = `<td>${idx+1}</td><td>${event}</td><td>${node}</td><td>${q}</td><td>${step.group}</td>`;
     traceTbody.appendChild(tr);
   });
-  rbTrace.style.display = '';
+  revealBlock(rbTrace, isInstant ? 0 : 1400);
 }
 
 // ── STEP ANIMATION ────────────────────────────────────────────────────────────
@@ -557,7 +598,14 @@ function resetAll() {
   if (forceTimer) { clearInterval(forceTimer); forceTimer = null; }
   RS = { n: 0, edges: [], nhan: [], highlighted: new Set(), activeNode: -1 };
   svNhom.textContent = svDinh.textContent = svCanh.textContent = svMax.textContent = '–';
-  [rbNhan, rbGroups, rbAdj, rbTrace].forEach(el => { el.style.display = 'none'; });
+  [svNhom, svDinh, svCanh, svMax].forEach(el => {
+    el.classList.remove('count-anim');
+    el.closest('.scard') && el.closest('.scard').classList.remove('highlight', 'anim');
+  });
+  [rbNhan, rbGroups, rbAdj, rbTrace].forEach(el => {
+    el.style.display = 'none';
+    el.classList.remove('revealed');
+  });
   legendRow.style.display = 'none';
   setStatus('San sang', '');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -710,25 +758,26 @@ function runLoi01() {
   p.errorCases.forEach(ec => {
     const err = kiemTraDauVao(ec.n, ec.edges);
     const pass = ec.expectErr ? (err !== null) : (err === null);
-    const col = pass ? '#34d399' : '#f87171';
+    const col = pass ? '#059669' : '#dc2626';
     const div = document.createElement('div');
     div.className = 'grp-item anim';
-    div.style.borderColor = pass ? 'rgba(52,211,153,0.4)' : 'rgba(248,113,113,0.4)';
+    div.style.background = pass ? 'rgba(5,150,105,0.06)' : 'rgba(220,38,38,0.06)';
+    div.style.borderColor = pass ? 'rgba(5,150,105,0.3)' : 'rgba(220,38,38,0.3)';
     div.innerHTML = `
       <div class="grp-dot" style="background:${col}"></div>
-      <span class="grp-badge" style="color:${col}">${pass ? 'PASS' : 'FAIL'}</span>
-      <span class="grp-members" style="font-size:0.72rem">${ec.label}</span>
-      <span class="grp-size" style="color:${col}">${pass ? '✓ Tu choi' : '✗ Khong phat hien'}</span>
+      <span class="grp-badge" style="color:${col};font-weight:800">${pass ? 'PASS' : 'FAIL'}</span>
+      <span class="grp-members" style="font-size:0.75rem;color:#1e293b;font-weight:600">${ec.label}</span>
+      <span class="grp-size" style="color:${col};font-weight:700;background:#ffffff">${pass ? '✓ Từ chối' : '✗ Không phát hiện'}</span>
     `;
     if (err && pass) {
       const errNote = document.createElement('div');
-      errNote.style.cssText = 'font-size:0.65rem;color:#8a97b8;padding:0.2rem 0 0 1.2rem;font-family:JetBrains Mono,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%';
-      errNote.textContent = '  Ly do: ' + err;
+      errNote.style.cssText = 'font-size:0.68rem;color:#475569;padding:0.25rem 0 0 1.2rem;font-family:JetBrains Mono,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%';
+      errNote.textContent = '  Lý do: ' + err;
       div.appendChild(errNote);
     }
     groupList.appendChild(div);
   });
-  rbGroups.style.display = '';
+  revealBlock(rbGroups, 300);
 
   // Draw a clean 4-node graph (no invalid edges) with a red X label
   resizeCanvas();
@@ -743,9 +792,9 @@ function runLoi01() {
     const W = canvas.width, H = canvas.height;
     ctx.save();
     ctx.font = 'bold 16px Inter, sans-serif';
-    ctx.fillStyle = '#f87171';
+    ctx.fillStyle = '#dc2626';
     ctx.textAlign = 'center';
-    ctx.fillText('⚠ Canh (1→5) bi tu choi – dinh 5 vuot ngoai [1,4]', W/2, H - 18);
+    ctx.fillText('⚠ Cạnh (1→5) bị từ chối – đỉnh 5 vượt ngoài [1, 4]', W/2, H - 18);
     ctx.restore();
   });
 }
@@ -788,9 +837,84 @@ document.getElementById('cases-tbody').addEventListener('click', e => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
+function executeInstantRun() {
+  if (currentPreset === 'LOI01') {
+    runLoi01();
+    if (forceTimer) { clearInterval(forceTimer); forceTimer = null; }
+    for (let k = 0; k < 130; k++) forceTick(4, []);
+    drawGraph();
+    const W = canvas.width, H = canvas.height;
+    ctx.save();
+    ctx.font = 'bold 16px Inter, sans-serif';
+    ctx.fillStyle = '#dc2626';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚠ Cạnh (1→5) bị từ chối – đỉnh 5 vượt ngoài [1, 4]', W/2, H - 18);
+    ctx.restore();
+    rbGroups.style.display = '';
+    rbGroups.classList.add('revealed');
+    return;
+  }
+
+  const { n, edges, error } = parseInput();
+  if (error || kiemTraDauVao(n, edges)) return;
+
+  const result = bfsThanhPhan(n, edges);
+  resizeCanvas();
+  initPos(n);
+  for (let k = 0; k < 130; k++) forceTick(n, edges);
+
+  RS = { n, edges, nhan: result.nhan, highlighted: new Set(), activeNode: -1 };
+  for (let v = 1; v <= n; v++) if (RS.nhan[v]) RS.highlighted.add(v);
+
+  drawGraph();
+
+  renderResults(result, edges, true);
+  renderTrace(result.trace, true);
+
+  [rbNhan, rbGroups, rbAdj, rbTrace].forEach(el => {
+    el.style.display = '';
+    el.classList.add('revealed');
+  });
+  legendRow.style.display = 'flex';
+  setStatus('Hoàn thành ✓', '');
+  btnStep.disabled = true;
+
+  const largest = timNhomLonNhat(result.danhSachNhom);
+  svNhom.textContent = result.soNhom;
+  svDinh.textContent = n;
+  svCanh.textContent = edges.length;
+  svMax.textContent  = largest.length;
+  [svNhom, svDinh, svCanh, svMax].forEach(el => {
+    const card = el.closest('.scard');
+    if (card) card.classList.add('highlight');
+  });
+}
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
 resizeCanvas();
 buildCasesTable();
 buildCards();
-loadPreset('VD01');
-setTimeout(executeRun, 400);
+
+const urlParams = new URLSearchParams(window.location.search);
+const caseParam = urlParams.get('case');
+const isInstant = urlParams.get('instant') === '1';
+
+if (caseParam && PRESETS[caseParam]) {
+  loadPreset(caseParam);
+  if (isInstant) {
+    executeInstantRun();
+  } else {
+    setTimeout(executeRun, 400);
+  }
+} else {
+  loadPreset('VD01');
+  setTimeout(executeRun, 400);
+}
+
+if (urlParams.get('view') === 'cases') {
+  const layout = document.querySelector('.layout');
+  if (layout) layout.style.display = 'none';
+  const allCases = document.querySelector('.all-cases');
+  if (allCases) allCases.style.paddingTop = '1rem';
+}
+
