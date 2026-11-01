@@ -24,10 +24,32 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Word temp files
+# Word & Office temp files
 ~$*.docx
 ~WRL*.tmp
 
 # Log / scratch
 *.log
 scratch/
+
+# Tai lieu hoc phan, de thi & file nop ca nhan
+00_HUONG_DAN_SINH_VIEN.html
+02_Do_an_mau_BFS_End_to_End.pdf
+04_Rubric_chung_91_de_tai.pdf
+BFS_mau.bundle
+Danh_sach_va_de_giao/
+Giao_trinh/
+PHAT_CHO_SINH_VIEN_2026_10_17/
+Bieu_mau_sinh_vien_tu_dien/
+N24DCDT091_DT077_PhamHuynhThu_MaNguon/
+*.docx
+*.pdf
+*.zip
+*.json
+NOI_DUNG_BAO_CAO_DT077_DE_COPY.md
+PHIEN_BAN.txt
+build_full_report.py
+fill_report_docx.py
+generate_real_web_screenshots.py
+generate_report_data.py
+push_to_github.py
